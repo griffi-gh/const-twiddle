@@ -1,8 +1,11 @@
 //! # const-twiddle
 //! Designed to be similar to `twiddle`, but also works in `const` contexts.\
-//! Created for use in my gba emulator
+//! Created for use in my gba emulator\
+//! Supports `#![no_std]` by default
 
-use std::ops::RangeInclusive;
+#![no_std]
+
+use core::ops::RangeInclusive;
 
 /// A trait for bit-twiddling utility functions.
 pub trait Twiddle<T> {

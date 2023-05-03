@@ -1,7 +1,14 @@
 [package]
 name = "const-twiddle"
-version = "0.1.0"
+authors = ["griffi-gh <prasol258@gmail.com>"]
+description = "Bitwise utility functions"
+repository = "https://github.com/griffi-gh/const-twiddle/"
+version = "0.0.1"
 edition = "2021"
+license = "MIT"
+license-file = "LICENSE"
+keywords = ["bitwise", "bit", "bits", "twiddle", "no-std"]
+categories = ["no-std", "no-std::no-alloc"]
 
 [dependencies]
 paste = "1.0"
