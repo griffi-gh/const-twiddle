@@ -9,6 +9,11 @@ license = "MIT"
 keywords = ["bitwise", "bit", "bits", "twiddle", "no-std"]
 categories = ["no-std", "no-std::no-alloc"]
 readme = "README.md"
+include = [
+  "/src/**/*.rs",
+  "/build.rs",
+  "/Cargo.toml",
+]
 
 [dependencies]
 paste = "1.0"
