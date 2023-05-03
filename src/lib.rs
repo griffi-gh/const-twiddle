@@ -20,6 +20,14 @@ pub trait Twiddle<T> {
 	/// Returns a given bit as a boolean.
 	#[must_use] 
 	fn bit(self, bit: u32) -> bool;
+	
+	/// Replace a set of bits
+	#[must_use] 
+	fn set_bits(self, range: RangeInclusive<u32>, value: T) -> T;
+
+	/// Set a single bit
+	#[must_use] 
+	fn set_bit(self, bit: u32, value: bool) -> T;
 }
 
 macro_rules! impl_twiddle {
@@ -52,6 +60,18 @@ macro_rules! impl_twiddle {
 			#[inline]
 			const fn [<$tt _bit>](x: $tt, bit: u32) -> bool {
 				((x >> bit) & 1) != 0
+			}
+
+			#[inline]
+			const fn [<$tt _set_bits>](x: $tt, start: u32, end: u32, bits: $tt) -> $tt {
+				let mask = [<$tt _mask>](start, end);
+        (x & !mask) | ((bits << end) & mask)
+			}
+
+			#[inline]
+			const fn [<$tt _set_bit>](x: $tt, bit: u32, value: bool) -> $tt {
+				let mask = [<$tt _mask>](bit, bit);
+				(x & !mask) | ((value as $tt) << bit)
 			}
 			
 			/// Allows usage of [`Twiddle`] functions in const contexts 
@@ -96,6 +116,20 @@ macro_rules! impl_twiddle {
 				pub const fn bit(self, bit: u32) -> bool {
 					[<$tt _bit>](self.0, bit)
 				}
+
+				/// Replace a set of bits
+				#[inline]
+				#[must_use] 
+				pub const fn set_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
+					[<$tt _set_bits>](self.0, *range.start(), *range.end(), value)
+				}
+
+				/// Set a single bit
+				#[inline]
+				#[must_use] 
+				pub const fn set_bit(self, bit: u32, value: bool) -> $tt {
+					[<$tt _set_bit>](self.0, bit, value)
+				}
 			}
 
       impl Twiddle<$tt> for [<Const $tt:upper>] {
@@ -116,6 +150,18 @@ macro_rules! impl_twiddle {
 				fn bit(self, bit: u32) -> bool {
 					self.bit(bit)
 				}
+
+				#[inline]
+				#[must_use] 
+				fn set_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
+					self.set_bits(range, value)
+				}
+
+				#[inline]
+				#[must_use] 
+				fn set_bit(self, bit: u32, value: bool) -> $tt {
+					self.set_bit(bit, value)
+				}
 			}
 
 			impl Twiddle<$tt> for $tt {
@@ -135,6 +181,18 @@ macro_rules! impl_twiddle {
 				#[must_use]
 				fn bit(self, bit: u32) -> bool {
 					[<$tt _bit>](self, bit)
+				}
+
+				#[inline]
+				#[must_use] 
+				fn set_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
+					[<$tt _set_bits>](self, *range.start(), *range.end(), value)
+				}
+
+				#[inline]
+				#[must_use] 
+				fn set_bit(self, bit: u32, value: bool) -> $tt {
+					[<$tt _set_bit>](self, bit, value)
 				}
 			}
 		}
