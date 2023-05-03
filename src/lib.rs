@@ -18,13 +18,19 @@ pub trait Twiddle<T> {
 	#[must_use] 
 	fn bit(self, bit: u32) -> bool;
 	
-	/// Replace a set of bits
+	/// Replace a set of bits and return the modified value
 	#[must_use] 
-	fn set_bits(self, range: RangeInclusive<u32>, value: T) -> T;
+	fn with_bits(self, range: RangeInclusive<u32>, value: T) -> Self;
 
 	/// Set a single bit
 	#[must_use] 
-	fn set_bit(self, bit: u32, value: bool) -> T;
+	fn with_bit(self, bit: u32, value: bool) -> Self;
+
+	/// Replace a set of bits in place
+	fn set_bits(&mut self, range: RangeInclusive<u32>, value: T);
+
+	/// Set a single bit in place
+	fn set_bit(&mut self, bit: u32, value: bool);
 }
 
 macro_rules! impl_twiddle {
@@ -60,13 +66,13 @@ macro_rules! impl_twiddle {
 			}
 
 			#[inline(always)]
-			const fn [<$tt _set_bits>](x: $tt, start: u32, end: u32, bits: $tt) -> $tt {
+			const fn [<$tt _with_bits>](x: $tt, start: u32, end: u32, bits: $tt) -> $tt {
 				let mask = [<$tt _mask>](start, end);
         (x & !mask) | ((bits << end) & mask)
 			}
 
 			#[inline(always)]
-			const fn [<$tt _set_bit>](x: $tt, bit: u32, value: bool) -> $tt {
+			const fn [<$tt _with_bit>](x: $tt, bit: u32, value: bool) -> $tt {
 				let mask = [<$tt _mask>](bit, bit);
 				(x & !mask) | ((value as $tt) << bit)
 			}
@@ -117,15 +123,15 @@ macro_rules! impl_twiddle {
 				/// Replace a set of bits
 				#[inline(always)]
 				#[must_use] 
-				pub const fn set_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
-					[<$tt _set_bits>](self.0, *range.start(), *range.end(), value)
+				pub const fn with_bits(self, range: RangeInclusive<u32>, value: $tt) -> Self {
+					Self([<$tt _with_bits>](self.0, *range.start(), *range.end(), value))
 				}
 
 				/// Set a single bit
 				#[inline(always)]
 				#[must_use] 
-				pub const fn set_bit(self, bit: u32, value: bool) -> $tt {
-					[<$tt _set_bit>](self.0, bit, value)
+				pub const fn with_bit(self, bit: u32, value: bool) -> Self {
+					Self([<$tt _with_bit>](self.0, bit, value))
 				}
 			}
 
@@ -150,14 +156,24 @@ macro_rules! impl_twiddle {
 
 				#[inline(always)]
 				#[must_use] 
-				fn set_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
-					self.set_bits(range, value)
+				fn with_bits(self, range: RangeInclusive<u32>, value: $tt) -> Self {
+					self.with_bits(range, value)
 				}
 
 				#[inline(always)]
 				#[must_use] 
-				fn set_bit(self, bit: u32, value: bool) -> $tt {
-					self.set_bit(bit, value)
+				fn with_bit(self, bit: u32, value: bool) -> Self {
+					self.with_bit(bit, value)
+				}
+
+				#[inline(always)]
+				fn set_bits(&mut self, range: RangeInclusive<u32>, value: $tt) {
+					*self = self.with_bits(range, value);
+				}
+
+				#[inline(always)]
+				fn set_bit(&mut self, bit: u32, value: bool) {
+					*self = self.with_bit(bit, value);
 				}
 			}
 
@@ -182,14 +198,24 @@ macro_rules! impl_twiddle {
 
 				#[inline(always)]
 				#[must_use] 
-				fn set_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
-					[<$tt _set_bits>](self, *range.start(), *range.end(), value)
+				fn with_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
+					[<$tt _with_bits>](self, *range.start(), *range.end(), value)
 				}
 
 				#[inline(always)]
 				#[must_use] 
-				fn set_bit(self, bit: u32, value: bool) -> $tt {
-					[<$tt _set_bit>](self, bit, value)
+				fn with_bit(self, bit: u32, value: bool) -> $tt {
+					[<$tt _with_bit>](self, bit, value)
+				}
+
+				#[inline(always)]
+				fn set_bits(&mut self, range: RangeInclusive<u32>, value: $tt) {
+					*self = [<$tt _with_bits>](*self, *range.start(), *range.end(), value);
+				}
+
+				#[inline(always)]
+				fn set_bit(&mut self, bit: u32, value: bool) {
+					*self = [<$tt _with_bit>](*self, bit, value);
 				}
 			}
 		}
