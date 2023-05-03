@@ -1,7 +1,4 @@
-//! # const-twiddle
-//! Designed to be similar to `twiddle`, but also works in `const` contexts.\
-//! Created for use in my gba emulator\
-//! Supports `#![no_std]` by default
+#![doc = include_str!("../README.md")]
 
 #![no_std]
 

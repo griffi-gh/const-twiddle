@@ -3,7 +3,7 @@ name = "const-twiddle"
 authors = ["griffi-gh <prasol258@gmail.com>"]
 description = "Bitwise utility functions"
 repository = "https://github.com/griffi-gh/const-twiddle/"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 license = "MIT"
 keywords = ["bitwise", "bit", "bits", "twiddle", "no-std"]
@@ -13,6 +13,7 @@ include = [
   "/src/**/*.rs",
   "/build.rs",
   "/Cargo.toml",
+  "/README.md",
 ]
 
 [dependencies]
