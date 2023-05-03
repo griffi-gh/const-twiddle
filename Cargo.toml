@@ -9,6 +9,7 @@ license = "MIT"
 license-file = "LICENSE"
 keywords = ["bitwise", "bit", "bits", "twiddle", "no-std"]
 categories = ["no-std", "no-std::no-alloc"]
+readme = "README.md"
 
 [dependencies]
 paste = "1.0"
