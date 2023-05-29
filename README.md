@@ -10,7 +10,7 @@ Add `const-twiddle` to your Cargo.toml file:
 
 ```toml
 [dependencies]
-const-twiddle = "0.0.4"
+const-twiddle = "0.1"
 ```
 
 Usage outside of `const`:
