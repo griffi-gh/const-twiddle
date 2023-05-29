@@ -7,23 +7,27 @@ use core::ops::RangeInclusive;
 /// A trait for bit-twiddling utility functions.
 pub trait Twiddle<T> {
 	/// Creates a bitmask from a range of bits.
-	#[must_use] 
+	#[must_use]
 	fn mask(range: RangeInclusive<u32>) -> T;
 
 	/// Returns a set of bits.
-	#[must_use] 
+	#[must_use]
 	fn bits(self, range: RangeInclusive<u32>) -> T;
 
 	/// Returns a given bit as a boolean.
-	#[must_use] 
+	#[must_use]
 	fn bit(self, bit: u32) -> bool;
 	
+	/// Returns a given bit as an integer.
+	#[must_use]
+	fn ibit(self, bit: u32) -> T;
+
 	/// Replace a set of bits and return the modified value
-	#[must_use] 
+	#[must_use]
 	fn with_bits(self, range: RangeInclusive<u32>, value: T) -> Self;
 
 	/// Set a single bit
-	#[must_use] 
+	#[must_use]
 	fn with_bit(self, bit: u32, value: bool) -> Self;
 
 	/// Replace a set of bits in place
@@ -77,7 +81,7 @@ macro_rules! impl_twiddle {
 				(x & !mask) | ((value as $tt) << bit)
 			}
 			
-			/// Allows usage of [`Twiddle`] functions in const contexts 
+			/// Allows usage of [`Twiddle`] functions in const contexts
 			#[repr(transparent)]
 			#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 			pub struct [<Const $tt:upper>](pub $tt);
@@ -120,16 +124,23 @@ macro_rules! impl_twiddle {
 					[<$tt _bit>](self.0, bit)
 				}
 
+				/// Returns a given bit as an integer.
+				#[inline(always)]
+				#[must_use]
+				pub const fn ibit(self, bit: u32) -> $tt {
+					[<$tt _bit>](self.0, bit) as $tt
+				}
+
 				/// Replace a set of bits
 				#[inline(always)]
-				#[must_use] 
+				#[must_use]
 				pub const fn with_bits(self, range: RangeInclusive<u32>, value: $tt) -> Self {
 					Self([<$tt _with_bits>](self.0, *range.start(), *range.end(), value))
 				}
 
 				/// Set a single bit
 				#[inline(always)]
-				#[must_use] 
+				#[must_use]
 				pub const fn with_bit(self, bit: u32, value: bool) -> Self {
 					Self([<$tt _with_bit>](self.0, bit, value))
 				}
@@ -155,13 +166,19 @@ macro_rules! impl_twiddle {
 				}
 
 				#[inline(always)]
-				#[must_use] 
+				#[must_use]
+				fn ibit(self, bit: u32) -> $tt {
+					self.ibit(bit)
+				}
+
+				#[inline(always)]
+				#[must_use]
 				fn with_bits(self, range: RangeInclusive<u32>, value: $tt) -> Self {
 					self.with_bits(range, value)
 				}
 
 				#[inline(always)]
-				#[must_use] 
+				#[must_use]
 				fn with_bit(self, bit: u32, value: bool) -> Self {
 					self.with_bit(bit, value)
 				}
@@ -197,13 +214,19 @@ macro_rules! impl_twiddle {
 				}
 
 				#[inline(always)]
-				#[must_use] 
+				#[must_use]
+				fn ibit(self, bit: u32) -> $tt {
+					[<$tt _bit>](self, bit) as $tt
+				}
+
+				#[inline(always)]
+				#[must_use]
 				fn with_bits(self, range: RangeInclusive<u32>, value: $tt) -> $tt {
 					[<$tt _with_bits>](self, *range.start(), *range.end(), value)
 				}
 
 				#[inline(always)]
-				#[must_use] 
+				#[must_use]
 				fn with_bit(self, bit: u32, value: bool) -> $tt {
 					[<$tt _with_bit>](self, bit, value)
 				}
@@ -228,6 +251,55 @@ macro_rules! impl_twiddle {
 }
 
 impl_twiddle! {
-	u8, u16, u32, u64, u128, 
+	u8, u16, u32, u64, u128,
 	i8, i16, i32, i64, i128
+}
+
+#[cfg(test)]
+mod test {
+	use super::*;
+
+	#[test]
+	fn test_with_bit() {
+		let y = 5;
+
+		//bit 3 should be 0
+		assert!(!y.bit(3));
+		assert_eq!(y.ibit(3), 0);
+
+		//bit 2 should be 1
+		assert!(y.bit(2));
+		assert_eq!(y.ibit(2), 1);
+
+		//bit 1 should be 0
+		assert!(!y.bit(1));
+		assert_eq!(y.ibit(1), 0);
+
+		//bit 0 should be 1
+		assert!(y.bit(0));
+		assert_eq!(y.ibit(0), 1);
+
+		let x = y.with_bit(0, false);
+		
+		//Value should be 4
+		assert_eq!(x, 4);
+
+		//bit 0 should be 0
+		assert!(!x.bit(0));
+		assert_eq!(x.ibit(0), 0);
+
+		//bit 2 should still be 1
+		assert!(x.bit(2));
+		assert_eq!(x.ibit(2), 1);
+	}
+
+	#[test]
+	fn test_with_bit_const() {
+		const fn test() -> u8 {
+			ConstU8(5).with_bit(0, false).0
+		}
+		assert_eq!(test(), 4);
+	}
+
+	//TODO write more tests
 }
